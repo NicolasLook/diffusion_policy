@@ -52,6 +52,9 @@ class TrainRobomimicImageWorkspace(BaseWorkspace):
     def run(self):
         cfg = copy.deepcopy(self.cfg)
 
+        print("quitting")
+        return
+
         # resume training
         if cfg.training.resume:
             lastest_ckpt_path = self.get_checkpoint_path()
@@ -103,6 +106,9 @@ class TrainRobomimicImageWorkspace(BaseWorkspace):
 
         # save batch for sampling
         train_sampling_batch = None
+
+        # for early stopping (start with really high number)
+        previous_val_score = float('inf')
 
         if cfg.training.debug:
             cfg.training.num_epochs = 2
@@ -240,6 +246,13 @@ class TrainRobomimicImageWorkspace(BaseWorkspace):
                 json_logger.log(step_log)
                 self.global_step += 1
                 self.epoch += 1
+
+                if cfg.training.stop_early and self.epoch % cfg.training.checkpoint_every == 0:
+                    if step_log['val_loss'] > previous_val_score:
+                        return
+
+                    previous_val_score = step_log['val_loss']
+
 
 
 @hydra.main(

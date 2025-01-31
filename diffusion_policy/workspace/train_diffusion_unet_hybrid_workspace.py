@@ -61,6 +61,8 @@ class TrainDiffusionUnetHybridWorkspace(BaseWorkspace):
     def run(self):
         cfg = copy.deepcopy(self.cfg)
 
+        previous_val_loss = float('inf')
+
         # resume training
         if cfg.training.resume:
             lastest_ckpt_path = self.get_checkpoint_path()
@@ -283,6 +285,12 @@ class TrainDiffusionUnetHybridWorkspace(BaseWorkspace):
                 json_logger.log(step_log)
                 self.global_step += 1
                 self.epoch += 1
+
+                if cfg.training.stop_early and self.epoch % cfg.training.checkpoint_every == 0:
+                    if step_log['val_loss'] > previous_val_loss:
+                        return
+
+                    previous_val_loss = step_log['val_loss']
 
 @hydra.main(
     version_base=None,
