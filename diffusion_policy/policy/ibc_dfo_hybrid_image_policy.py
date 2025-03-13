@@ -278,9 +278,9 @@ class IbcDfoHybridImagePolicy(BaseImagePolicy):
 
         # Small additive noise to true positives.
         this_action += torch.normal(mean=0, std=1e-4,
-            size=this_action.shape,
-            dtype=this_action.dtype,
-            device=this_action.device)
+                                    size=this_action.shape,
+                                    dtype=this_action.dtype,
+                                    device=this_action.device)
 
         # Sample negatives: (B, train_n_neg, Ta, Da)
         naction_stats = self.get_naction_stats()
@@ -296,15 +296,15 @@ class IbcDfoHybridImagePolicy(BaseImagePolicy):
 
         if self.andy_train:
             # Get onehot labels
-            labels = torch.zeros(action_samples.shape[:2], 
-                dtype=this_action.dtype, device=this_action.device)
+            labels = torch.zeros(action_samples.shape[:2],
+                                 dtype=this_action.dtype, device=this_action.device)
             labels[:,0] = 1
             logits = self.forward(nobs_features, action_samples)
             # (B, N)
             logits = torch.log_softmax(logits, dim=-1)
             loss = -torch.mean(torch.sum(logits * labels, axis=-1))
         else:
-            labels = torch.zeros((B,),dtype=torch.int64, device=this_action.device)
+            labels = torch.zeros((B,), dtype=torch.int64, device=this_action.device)
             # training
             logits = self.forward(nobs_features, action_samples)
             loss = F.cross_entropy(logits, labels)

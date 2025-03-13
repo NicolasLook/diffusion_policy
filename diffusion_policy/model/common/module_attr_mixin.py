@@ -8,6 +8,10 @@ class ModuleAttrMixin(nn.Module):
     @property
     def device(self):
         return next(iter(self.parameters())).device
+
+    @device.setter
+    def device(self, device: str):
+        self.to(device)
     
     @property
     def dtype(self):

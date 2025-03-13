@@ -1,3 +1,5 @@
+import cv2
+
 if __name__ == "__main__":
     import sys
     import os
@@ -215,11 +217,27 @@ class TrainDiffusionUnetHybridWorkspace(BaseWorkspace):
                 # run rollout
                 if (self.epoch % cfg.training.rollout_every) == 0:
                     runner_log = env_runner.run(policy)
+                    videos = {k: v for k, v in runner_log.items() if isinstance(v, wandb.Video)}
+                    for k, v in runner_log.items():
+                        cap = cv2.VideoCapture(v._path)
+                        frames = []
+                        while cap.isOpened():
+                            ret, frame = cap.read()
+                            if not ret:
+                                break
+                            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # Convert from OpenCV BGR to RGB
+                            frames.append(frame)
+                        cap.release()
+                        video_tensor = torch.tensor(np.array(frames), dtype=torch.float32).permute(0, 3, 1, 2) / 255.0
+                        # Add batch dimension (1, T, C, H, W)
+                        video_tensor = video_tensor.unsqueeze(0)
+
                     # log all
                     step_log.update(runner_log)
 
                 # run validation
-                if (self.epoch % cfg.training.val_every) == 0:
+                #if (self.epoch % cfg.training.val_every) == 0:
+                if True:
                     with torch.no_grad():
                         val_losses = list()
                         with tqdm.tqdm(val_dataloader, desc=f"Validation epoch {self.epoch}", 
@@ -237,7 +255,8 @@ class TrainDiffusionUnetHybridWorkspace(BaseWorkspace):
                             step_log['val_loss'] = val_loss
 
                 # run diffusion sampling on a training batch
-                if (self.epoch % cfg.training.sample_every) == 0:
+                #if (self.epoch % cfg.training.sample_every) == 0:
+                if True:
                     with torch.no_grad():
                         # sample trajectory from training set, and evaluate difference
                         batch = dict_apply(train_sampling_batch, lambda x: x.to(device, non_blocking=True))
@@ -256,7 +275,8 @@ class TrainDiffusionUnetHybridWorkspace(BaseWorkspace):
                         del mse
                 
                 # checkpoint
-                if (self.epoch % cfg.training.checkpoint_every) == 0:
+                #if (self.epoch % cfg.training.checkpoint_every) == 0:
+                if True:
                     # checkpointing
                     if cfg.checkpoint.save_last_ckpt:
                         self.save_checkpoint()
