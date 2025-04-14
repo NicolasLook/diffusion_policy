@@ -255,8 +255,8 @@ class TrainDiffusionUnetHybridWorkspace(BaseWorkspace):
                             step_log['val_loss'] = val_loss
 
                 # run diffusion sampling on a training batch
-                #if (self.epoch % cfg.training.sample_every) == 0:
-                if True:
+                if (self.epoch % cfg.training.sample_every) == 0:
+                #if True:
                     with torch.no_grad():
                         # sample trajectory from training set, and evaluate difference
                         batch = dict_apply(train_sampling_batch, lambda x: x.to(device, non_blocking=True))
